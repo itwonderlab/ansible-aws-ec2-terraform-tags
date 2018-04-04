@@ -1,0 +1,48 @@
+
+wordpress_user: www-data
+wordpress_group: www-data
+wordpress_worker_processes: 4
+wordpress_worker_connections: 768
+wordpress_pid: /run/nginx.pid
+wordpress_certificates_path: /etc/nginx/ssl
+wordpress_sites_available_path: /etc/nginx/sites-available
+wordpress_sites_enabled_path: /etc/nginx/sites-enabled
+wordpress_tcp_enabled_path: /etc/nginx/tcp-enabled
+wordpress_letsencrypt_ssl_dir: "/etc/letsencrypt/live/" #default for certbot
+wordpress_letsencrypt_email: jruizjimenez@gmail.com
+wordpress_default_root_dir: /var/www/html/default
+
+
+wordpress_add_packages_repositories:
+- repo: "deb http://nginx.org/packages/mainline/ubuntu/ {{ansible_distribution_release}} nginx"
+- repo: "deb-src http://nginx.org/packages/mainline/ubuntu/ {{ansible_distribution_release}} nginx"
+- repo: "ppa:certbot/certbot"
+- repo: "ppa:ondrej/php"
+
+wordpress_config_files:
+- file: default.conf
+- file: wordpress.conf
+
+wordpress_add_packages_keys:
+- key: http://nginx.org/keys/nginx_signing.key
+
+wordpress_version: 4.9.2
+wordpress_version_checksum: 96e0b38028b0b2d00209290ebac20cb9f4a6d085.
+wordpress_php_release: 7.2
+
+
+wordpress_add_packages_names:
+- name: nginx
+- name: python-certbot-nginx
+- name: php{{wordpress_php_release}}
+- name: php{{wordpress_php_release}}-cli
+- name: php{{wordpress_php_release}}-common
+- name: php{{wordpress_php_release}}-json
+- name: php{{wordpress_php_release}}-opcache
+- name: php{{wordpress_php_release}}-mysql
+- name: php{{wordpress_php_release}}-mbstring
+- name: php{{wordpress_php_release}}-zip
+- name: php{{wordpress_php_release}}-fpm
+
+wordpress_remove_packages_names:
+- name: apache2*

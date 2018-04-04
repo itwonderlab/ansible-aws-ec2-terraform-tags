@@ -1,0 +1,22 @@
+  - hosts: tag_os_ubuntu:&tag_environment_pro
+    become: yes
+    roles:
+      - { role: linux/pam_limits, tags: [ 'pam_limits'] }
+      - { role: linux/hosts_file, tags: [ 'hosts_file'] }
+      - { role: linux/host_name, tags: [ 'host_name'] }
+    tags:
+      - common
+
+  - hosts: tag_os_id_ubuntu_16:&tag_environment_pro
+    become: yes
+    roles:
+      - { role: linux/add_packages, tags: [ 'add_packages'] }
+    tags:
+      - ubuntu_16
+
+  - hosts: tag_app_wp:&tag_environment_pro
+    become: yes
+    roles:
+      - { role: linux/wordpress, tags: [ 'wordpress'] }
+    tags:
+      - wordpress

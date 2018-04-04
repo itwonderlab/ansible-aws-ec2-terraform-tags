@@ -1,0 +1,5 @@
+---
+
+- name: Set hostname
+  hostname:
+    name: "{{linux_host_name}}"

@@ -1,0 +1,15 @@
+---
+
+- name: Setup php-fpm fix_pathinfo
+  replace:
+    dest="/etc/php/{{wordpress_php_release}}/fpm/php.ini"
+    regexp="(;cgi.fix_pathinfo=1)"
+    replace="cgi.fix_pathinfo=0"
+  become: yes
+
+- name: Setup php-fpm upload_max_filesize
+  replace:
+    dest="/etc/php/{{wordpress_php_release}}/fpm/php.ini"
+    regexp="(;upload_max_filesize = 2M)"
+    replace="upload_max_filesize = 5M"
+  become: yes

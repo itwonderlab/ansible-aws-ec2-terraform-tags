@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+
+{% for host_entry in linux_hosts_file_entries %}
+{{ host_entry.ip }} {{ host_entry.name }}
+{% endfor %}

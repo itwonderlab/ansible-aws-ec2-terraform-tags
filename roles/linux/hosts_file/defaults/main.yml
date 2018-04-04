@@ -1,0 +1,3 @@
+linux_hosts_file_entries:
+  - ip:    127.0.0.1
+    name:  localhost

@@ -1,0 +1,107 @@
+---
+- name: Disable and Stop Apache
+  service:
+    name=apache2
+    state=stopped
+    enabled=no
+- name: Clean nginx enabled sites directories
+  file:
+      path="{{ item }}"
+      state=absent
+  with_items:
+     - "{{ wordpress_sites_enabled_path }}"
+
+- name: Create nginx directories
+  file:
+      path="{{ item }}"
+      state=directory
+  with_items:
+     - "{{ wordpress_certificates_path }}"
+     - "{{ wordpress_sites_available_path }}"
+     - "{{ wordpress_sites_enabled_path }}"
+     - "{{ wordpress_letsencrypt_ssl_dir }}"
+     - "{{ wordpress_default_root_dir }}"
+
+- name: Write nginx.conf
+  template:
+     src=etc/nginx/nginx.conf
+     dest=/etc/nginx/nginx.conf
+  notify:
+     - Restart nginx
+
+- name: Write nginx config files
+  template:
+     src="etc/nginx/conf.d/{{item.file}}"
+     dest="/etc/nginx/conf.d/{{item.file}}"
+  with_items: "{{ wordpress_config_files | default([])}}"
+  when: wordpress_config_files is defined and not (wordpress_config_files is none or wordpress_config_files | trim == '')
+  notify:
+     - Restart nginx
+
+- name: Add nginx default vhost
+  template:
+    src=etc/nginx/sites-available/vhost_default
+    dest="{{ wordpress_sites_available_path }}/default"
+  notify:
+    - Restart nginx
+
+- name: Link nginx default vhost in sites-enabled
+  file:
+    src="{{ wordpress_sites_available_path }}/default"
+    dest="{{ wordpress_sites_enabled_path }}/default"
+    state=link
+  notify:
+    - Restart nginx
+
+- name: Reload nginx
+  service:
+    name=nginx
+    state=reloaded
+    enabled=yes
+
+  # --- SSL COMMON ----
+
+- name: Create dhparam.pem with stronger DHE parameter 4096 (WARNING takes a lot of time)
+  command: openssl dhparam -dsaparam -out "{{ wordpress_certificates_path }}/dhparam.pem" 4096 creates="{{ wordpress_certificates_path }}/dhparam.pem"
+  notify:
+    - Restart nginx
+
+- name: Generate certificates
+  shell: certbot certonly --webroot --email {{ wordpress_letsencrypt_email }} --agree-tos -d {{item.server_name}} --webroot-path {{ wordpress_default_root_dir }} -n --preferred-challenges http
+  #--test-cert --force-renewal
+  with_items: "{{ wordpress_vhosts_ssl | default([])}}"
+  when: wordpress_vhosts_ssl is defined and not (wordpress_vhosts_ssl is none or wordpress_vhosts_ssl | trim == '')
+  ignore_errors: yes
+  notify:
+    - Restart nginx
+
+  # --- SSL vhost's ----
+
+- name: Create SSL root directories
+  file:
+      path="{{ item.root_dir }}"
+      state=directory
+  with_items: "{{ wordpress_vhosts_ssl | default([])}}"
+  when: wordpress_vhosts_ssl is defined and not (wordpress_vhosts_ssl is none or wordpress_vhosts_ssl | trim == '')
+
+- name: Add SSL nginx vhost's
+  template:
+    src=etc/nginx/sites-available/ssl_vhost
+    dest="{{ wordpress_sites_available_path }}/ssl_{{ item.server_name }}"
+  with_items: "{{ wordpress_vhosts_ssl | default([])}}"
+  when: wordpress_vhosts_ssl is defined and not (wordpress_vhosts_ssl is none or wordpress_vhosts_ssl | trim == '')
+  notify:
+    - Restart nginx
+
+- name: Link SSL nginx vhost's in sites-enabled
+  file:
+    src="{{ wordpress_sites_available_path }}/ssl_{{item.server_name}}"
+    dest="{{ wordpress_sites_enabled_path }}/ssl_{{item.server_name}}" state=link
+  with_items: "{{ wordpress_vhosts_ssl | default([])}}"
+  when: wordpress_vhosts_ssl is defined and not (wordpress_vhosts_ssl is none or wordpress_vhosts_ssl | trim == '')
+  notify:
+    - Restart nginx
+
+# Auto-renew certificates and reload nginx
+- name: Add crontab to renew certificates
+  cron: minute="01" hour="8" weekday="1" job="certbot renew --post-hook \"service nginx restart\" >> /var/log/le-renew.log"

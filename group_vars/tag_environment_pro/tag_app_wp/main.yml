@@ -1,0 +1,10 @@
+wordpress_vhosts_ssl:
+  - server_name: "www.demo.itwonderlab.com"
+    server_alias: "ditwonderlab.com"
+    root_dir: "/var/www/html/www.demo.itwonderlab.com"
+    include_files:
+      - file: "wordpress.conf"
+    db_name: "www_ditwl_com"
+    db_user: "www_ditwl_com"
+    db_password: "KJdA$sa(7321das8312nay1"
+    db_host: "ditwl-rds-mariadb-pro-pub-01.c0viemr4r65n.us-east-1.rds.amazonaws.com"
