@@ -1,2 +1,0 @@
-# HOSTNAME
-Sets the Hostname
