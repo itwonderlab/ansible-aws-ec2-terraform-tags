@@ -43,6 +43,7 @@ resource "aws_subnet" "ditwl-sn-za-pro-pub-00" {
   vpc_id                  = aws_vpc.ditlw-vpc.id
   cidr_block              = "172.21.0.0/23" #172.21.0.0 - 172.21.1.255
   map_public_ip_on_launch = true
+  availability_zone = "us-east-1c"
   tags = {
     Name = "ditwl-sn-za-pro-pub-00"
   }
@@ -78,7 +79,7 @@ resource "aws_main_route_table_association" "ditwl-rta-default" {
 
 # Create a "base" Security Group to be assigned to all EC2 instances
 resource "aws_security_group" "ditwl-sg-base-ec2" {
-  name        = "ditwl-sg-ssh-ec2"
+  name        = "ditwl-sg-base-ec2"
   vpc_id      = aws_vpc.ditlw-vpc.id
 }
 
